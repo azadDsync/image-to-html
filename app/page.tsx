@@ -117,10 +117,37 @@ export default function Home() {
     });
   };
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Image to HTML Grid Pixel Converter",
+    "description": "Convert any image into a colorful HTML pixel grid with customizable rows and columns",
+    "url": "https://image-to-html-green.vercel.app",
+    "applicationCategory": "DesignApplication",
+    "operatingSystem": "Any",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "featureList": [
+      "Upload any image format",
+      "Adjustable grid size (2-50 rows and columns)",
+      "Real-time preview",
+      "Download as PNG",
+      "Dark mode support"
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Structured Data for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
      
-      <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+      <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50" role="navigation" aria-label="Main navigation">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
            
@@ -185,6 +212,7 @@ export default function Home() {
                 onClick={handleDownload}
                 disabled={!data || data.length === 0}
                 className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 text-sm shadow-sm hover:shadow-md disabled:cursor-not-allowed whitespace-nowrap disabled:opacity-50"
+                aria-label="Download grid as PNG image"
               >
                 💾 Download
               </button>
@@ -198,6 +226,7 @@ export default function Home() {
                     if (fileInputRef.current) fileInputRef.current.value = "";
                   }}
                   className="bg-gray-600 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 text-sm shadow-sm hover:shadow-md"
+                  aria-label="Clear uploaded image"
                 >
                   🗑️
                 </button>
@@ -208,9 +237,9 @@ export default function Home() {
       </nav>
 
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" role="main">
         {data && data.length > 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-8">
+          <section className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-8" aria-label="Generated pixel grid">
             <div className="overflow-auto">
               <div
                 style={{
@@ -221,6 +250,8 @@ export default function Home() {
                   aspectRatio: `${cols} / ${rows}`
                 }}
                 className="bg-gray-200 dark:bg-gray-700 p-1 rounded-lg"
+                role="img"
+                aria-label={`Pixel grid with ${rows} rows and ${cols} columns`}
               >
                 {data.map(({ color }, i) => (
                   <div
@@ -235,15 +266,16 @@ export default function Home() {
                 ))}
               </div>
             </div>
-          </div>
+          </section>
         ) : (
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-16 text-center">
+          <section className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-16 text-center" aria-label="Upload prompt">
             <div className="text-gray-400 dark:text-gray-500">
               <svg
                 className="mx-auto h-24 w-24 mb-4"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"
@@ -255,9 +287,9 @@ export default function Home() {
               <p className="text-lg font-medium">No image selected</p>
               <p className="text-sm mt-1">Upload an image to get started</p>
             </div>
-          </div>
+          </section>
         )}
-      </div>
+      </main>
     </div>
   );
 }
