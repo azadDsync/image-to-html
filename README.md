@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Image to HTML Grid Pixel Converter
+
+A modern web app that transforms your images into HTML grid pixels. Upload any image, adjust the grid dimensions, and watch as it gets converted into an interactive pixel grid where each cell represents the average color of that section of your image.
+
+## What Does It Do?
+
+Ever wanted to see what your image looks like as a pixelated grid? This app takes any image you upload and breaks it down into a customizable grid of colored squares. Each square displays the average color of that portion of your original image, creating a pixel art effect.
+
+It's perfect for:
+- Creating pixel art from photos
+- Visualizing images in a unique way
+- Understanding how images can be represented as color grids
+- Generating downloadable pixel grid images
+
+## Features
+
+- **Upload Any Image** - Supports all common image formats
+- **Adjustable Grid Size** - Control rows and columns (2-50) with smooth sliders
+- **Real-time Preview** - See your pixel grid update instantly
+- **Download Your Creation** - Export your pixel grid as a PNG image
+- **Dark Mode Support** - Works beautifully in both light and dark themes
+- **Responsive Design** - Clean, minimal interface that works on any device
 
 ## Getting Started
 
-First, run the development server:
+First, install the dependencies:
+
+```bash
+npm install
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser to start converting images to pixel grids!
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## How It Works
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Upload an Image** - Click the upload button in the navbar
+2. **Adjust Grid Dimensions** - Use the sliders to set how many rows and columns you want
+3. **Watch the Magic** - Your image is automatically converted to a grid of colored pixels
+4. **Download** - Save your pixel grid creation as a PNG
 
-## Learn More
+The app analyzes your image by dividing it into cells based on your grid settings, then calculates the average RGB color for each cell to create the pixel effect.
 
-To learn more about Next.js, take a look at the following resources:
+## Tech Stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Built with:
+- [Next.js 16](https://nextjs.org) - React framework
+- [TypeScript](https://www.typescriptlang.org) - Type safety
+- [Tailwind CSS](https://tailwindcss.com) - Styling
+- Canvas API - Image processing
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Screenshots
 
-## Deploy on Vercel
+#### Each cell is HTML div element
+![demo image](public/image/demo-img1.png)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
