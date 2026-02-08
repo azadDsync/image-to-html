@@ -33,27 +33,24 @@ export default function Home() {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
     if (!ctx) return [];
-    
+
     canvas.width = image.width;
     canvas.height = image.height;
     ctx.drawImage(image, 0, 0);
 
     const cellW = Math.floor(canvas.width / cols);
     const cellH = Math.floor(canvas.height / rows);
-    
+
     const result: GridCell[] = [];
 
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
-        const imageData = ctx.getImageData(
-          c * cellW,
-          r * cellH,
-          cellW,
-          cellH
-        ).data;
+        const imageData = ctx.getImageData(c * cellW, r * cellH, cellW, cellH).data;
 
         // average color
-        let rSum = 0, gSum = 0, bSum = 0;
+        let rSum = 0,
+          gSum = 0,
+          bSum = 0;
         const pixels = imageData.length / 4;
 
         for (let i = 0; i < imageData.length; i += 4) {
@@ -68,8 +65,8 @@ export default function Home() {
           color: {
             r: Math.round(rSum / pixels),
             g: Math.round(gSum / pixels),
-            b: Math.round(bSum / pixels)
-          }
+            b: Math.round(bSum / pixels),
+          },
         });
       }
     }
@@ -87,7 +84,7 @@ export default function Home() {
     }
   };
 
-  const handleDownload = () => {
+  const handleDownloadPng = () => {
     if (!data || data.length === 0) return;
 
     const canvas = document.createElement("canvas");
@@ -98,10 +95,9 @@ export default function Home() {
     canvas.width = cols * cellSize;
     canvas.height = rows * cellSize;
 
-    data.forEach(({ color }) => {
-      const x = (data.indexOf(data.find(cell => cell.color === color)!) % cols) * cellSize;
-      const y = Math.floor(data.indexOf(data.find(cell => cell.color === color)!) / cols) * cellSize;
-      
+    data.forEach(({ row, col, color }) => {
+      const x = col * cellSize;
+      const y = row * cellSize;
       ctx.fillStyle = `rgb(${color.r}, ${color.g}, ${color.b})`;
       ctx.fillRect(x, y, cellSize, cellSize);
     });
@@ -117,6 +113,85 @@ export default function Home() {
     });
   };
 
+  const buildStandaloneHtml = ({
+    grid,
+    rows,
+    cols,
+    cellSize = 20,
+    gap = 2,
+  }: {
+    grid: GridCell[];
+    rows: number;
+    cols: number;
+    cellSize?: number;
+    gap?: number;
+  }) => {
+    // ensure stable ordering
+    const ordered = [...grid].sort((a, b) => a.row - b.row || a.col - b.col);
+
+    const cells = ordered
+      .map(
+        ({ color }) =>
+          `<div class="cell" style="background: rgb(${color.r}, ${color.g}, ${color.b});"></div>`
+      )
+      .join("\n");
+
+    return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Image to HTML Grid (${rows}x${cols})</title>
+  <style>
+    :root {
+      --rows: ${rows};
+      --cols: ${cols};
+      --cell: ${cellSize}px;
+      --gap: ${gap}px;
+    }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding: 24px; }
+    .wrap { display: grid; gap: 12px; }
+    .meta { color: #555; font-size: 14px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(var(--cols), var(--cell));
+      grid-auto-rows: var(--cell);
+      gap: var(--gap);
+      padding: var(--gap);
+      background: #e5e7eb;
+      width: max-content;
+      border-radius: 8px;
+    }
+    .cell { width: var(--cell); height: var(--cell); border-radius: 2px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Image to HTML Grid</h1>
+    <div class="meta">Generated grid: ${rows} rows × ${cols} cols</div>
+    <div class="grid" aria-label="Pixel grid">
+${cells}
+    </div>
+  </div>
+</body>
+</html>`;
+  };
+
+  const handleDownloadHtml = () => {
+    if (!data || data.length === 0) return;
+
+    const html = buildStandaloneHtml({ grid: data, rows, cols });
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `grid-${rows}x${cols}.html`;
+    link.click();
+
+    URL.revokeObjectURL(url);
+  };
+
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
@@ -128,15 +203,16 @@ export default function Home() {
     "offers": {
       "@type": "Offer",
       "price": "0",
-      "priceCurrency": "USD"
+      "priceCurrency": "USD",
     },
     "featureList": [
       "Upload any image format",
       "Adjustable grid size (2-50 rows and columns)",
       "Real-time preview",
       "Download as PNG",
-      "Dark mode support"
-    ]
+      "Download as HTML",
+      "Dark mode support",
+    ],
   };
 
   return (
@@ -146,20 +222,19 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-     
-      <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50" role="navigation" aria-label="Main navigation">
+
+      <nav
+        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50"
+        role="navigation"
+        aria-label="Main navigation"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-           
             <div className="flex-shrink-0">
-              <h1 className="text-xl font-bold text-blue-600 dark:text-blue-400">
-                Image to Grid
-              </h1>
+              <h1 className="text-xl font-bold text-blue-600 dark:text-blue-400">Image to Grid</h1>
             </div>
 
-           
             <div className="flex items-center gap-4 flex-1 justify-end">
-             
               <input
                 ref={fileInputRef}
                 type="file"
@@ -172,12 +247,16 @@ export default function Home() {
                 htmlFor="file-upload"
                 className="cursor-pointer bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 text-sm shadow-sm hover:shadow-md whitespace-nowrap"
               >
-                {fileName ? `📁 ${fileName.slice(0, 15)}${fileName.length > 15 ? '...' : ''}` : "📤 Upload"}
+                {fileName
+                  ? `📁 ${fileName.slice(0, 15)}${fileName.length > 15 ? "..." : ""}`
+                  : "📤 Upload"}
               </label>
 
-              
               <div className="flex items-center gap-2 min-w-[120px]">
-                <label htmlFor="rows" className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                <label
+                  htmlFor="rows"
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap"
+                >
                   Rows: <span className="text-blue-600 dark:text-blue-400">{rows}</span>
                 </label>
                 <input
@@ -191,9 +270,11 @@ export default function Home() {
                 />
               </div>
 
-              
               <div className="flex items-center gap-2 min-w-[120px]">
-                <label htmlFor="cols" className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                <label
+                  htmlFor="cols"
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap"
+                >
                   Cols: <span className="text-blue-600 dark:text-blue-400">{cols}</span>
                 </label>
                 <input
@@ -207,17 +288,24 @@ export default function Home() {
                 />
               </div>
 
-              
               <button
-                onClick={handleDownload}
+                onClick={handleDownloadPng}
                 disabled={!data || data.length === 0}
                 className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 text-sm shadow-sm hover:shadow-md disabled:cursor-not-allowed whitespace-nowrap disabled:opacity-50"
                 aria-label="Download grid as PNG image"
               >
-                💾 Download
+                💾 PNG
               </button>
 
-              
+              <button
+                onClick={handleDownloadHtml}
+                disabled={!data || data.length === 0}
+                className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 text-sm shadow-sm hover:shadow-md disabled:cursor-not-allowed whitespace-nowrap disabled:opacity-50"
+                aria-label="Download grid as an HTML file"
+              >
+                ⬇️ HTML
+              </button>
+
               {fileName && (
                 <button
                   onClick={() => {
@@ -236,18 +324,20 @@ export default function Home() {
         </div>
       </nav>
 
-      
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" role="main">
         {data && data.length > 0 ? (
-          <section className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-8" aria-label="Generated pixel grid">
+          <section
+            className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-8"
+            aria-label="Generated pixel grid"
+          >
             <div className="overflow-auto">
               <div
                 style={{
-                  display: 'grid',
+                  display: "grid",
                   gridTemplateColumns: `repeat(${cols}, 1fr)`,
-                  gap: '2px',
-                  maxWidth: '100%',
-                  aspectRatio: `${cols} / ${rows}`
+                  gap: "2px",
+                  maxWidth: "100%",
+                  aspectRatio: `${cols} / ${rows}`,
                 }}
                 className="bg-gray-200 dark:bg-gray-700 p-1 rounded-lg"
                 role="img"
@@ -258,7 +348,7 @@ export default function Home() {
                     key={i}
                     style={{
                       backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`,
-                      aspectRatio: '1',
+                      aspectRatio: "1",
                     }}
                     className="rounded-sm transition-transform hover:scale-110 hover:z-10 cursor-pointer"
                     title={`RGB(${color.r}, ${color.g}, ${color.b})`}
@@ -268,7 +358,10 @@ export default function Home() {
             </div>
           </section>
         ) : (
-          <section className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-16 text-center" aria-label="Upload prompt">
+          <section
+            className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-16 text-center"
+            aria-label="Upload prompt"
+          >
             <div className="text-gray-400 dark:text-gray-500">
               <svg
                 className="mx-auto h-24 w-24 mb-4"
